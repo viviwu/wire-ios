@@ -53,7 +53,7 @@ NSString * const UserDefaultDisableAVS = @"ZMDisableAVS";
 NSString * const UserDefaultDisableUI = @"ZMDisableUI";
 NSString * const UserDefaultDisableHockey = @"ZMDisableHockey";
 NSString * const UserDefaultDisableAnalytics = @"ZMDisableAnalytics";
-
+NSString * const UserDefaultTwitterLinkOpeningOption = @"TwitterLinkOpeningOption";
 
 @interface Settings ()
 
@@ -80,7 +80,8 @@ NSString * const UserDefaultDisableAnalytics = @"ZMDisableAnalytics";
 
 + (NSArray *)allDefaultsKeys
 {
-    return @[UserDefaultMarkdown,
+    return @[
+             UserDefaultMarkdown,
              UserDefaultChatHeadsDisabled,
              UserDefaultCursorTutorialCompleted,
              UserDefaultLastViewedConversation,
@@ -99,7 +100,8 @@ NSString * const UserDefaultDisableAnalytics = @"ZMDisableAnalytics";
              UserDefaultDisableHockey,
              UserDefaultDisableAnalytics,
              UserDefaultLastUserLocation,
-             UserDefaultPreferredCamera
+             UserDefaultPreferredCamera,
+             UserDefaultTwitterLinkOpeningOption
              ];
 }
 
@@ -407,6 +409,16 @@ NSString * const UserDefaultDisableAnalytics = @"ZMDisableAnalytics";
 {
     [self.defaults setBool:disableAnalytics forKey:UserDefaultDisableAnalytics];
     [self.defaults synchronize];
+}
+
+- (NSInteger)twitterLinkOpeningOptionRawValue
+{
+    return [self.defaults integerForKey:UserDefaultTwitterLinkOpeningOption];
+}
+
+- (void)setTwitterLinkOpeningOptionRawValue:(NSInteger)twitterLinkOpeningOptionRawValue
+{
+    [self.defaults setInteger:twitterLinkOpeningOptionRawValue forKey:UserDefaultTwitterLinkOpeningOption];
 }
 
 @end

@@ -422,8 +422,8 @@
 
 - (void)articleViewWantsToOpenURL:(ArticleView *)articleView url:(NSURL *)url
 {
-    if (! [UIApplication.sharedApplication openURL:url]) {
-        DDLogError(@"Unable to open URL: %@", url);
+    if ([self.delegate respondsToSelector:@selector(conversationCell:wantsToOpenURL:)]) {
+        [self.delegate conversationCell:self wantsToOpenURL:url];
     }
 }
 

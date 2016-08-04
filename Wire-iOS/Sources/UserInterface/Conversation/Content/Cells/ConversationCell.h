@@ -69,6 +69,7 @@ typedef void (^SelectedMenuBlock)(BOOL selected, BOOL animated);
 - (void)conversationCell:(ConversationCell *)cell resendMessageTapped:(ZMMessage *)message;
 - (void)conversationCell:(ConversationCell *)cell didSelectAction:(ConversationCellAction)actionId;
 - (void)conversationCell:(ConversationCell *)cell didOpenMenuForCellType:(MessageType)messageType;
+- (void)conversationCell:(ConversationCell *)cell wantsToOpenURL:(NSURL *)url;
 
 @end
 

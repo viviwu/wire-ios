@@ -284,11 +284,10 @@ import Foundation
             return alert
         }
         
-        let pushSection = SettingsSectionDescriptor(cellDescriptors: [pushButton], header: .None, footer: pushSectionSubtitle)  { (_) -> (Bool) in
-            return true
-        }
+        let pushSection = SettingsSectionDescriptor(cellDescriptors: [pushButton], header: .None, footer: pushSectionSubtitle)
+        let openInResetSection = resetOpenInSection()
         
-        return SettingsGroupCellDescriptor(items: [sendUsageSection, troubleshootingSection, pushSection], title: "self.settings.advanced.title".localized)
+        return SettingsGroupCellDescriptor(items: [sendUsageSection, troubleshootingSection, pushSection, openInResetSection], title: "self.settings.advanced.title".localized)
     }
     
     func developerGroup() -> SettingsCellDescriptorType {
@@ -313,5 +312,32 @@ import Foundation
             let storyboard = UIStoryboard(name: "DeveloperAPNS", bundle:NSBundle(forClass: self.dynamicType))
             return storyboard.instantiateInitialViewController()
         }
+    }
+    
+    // MARK: - Helper
+    
+    private func resetOpenInSection() -> SettingsSectionDescriptor {
+        let resetOpenInButton = SettingsExternalScreenCellDescriptor(
+            title: "self.settings.advanced.reset_open_in".localized,
+            isDestructive: false,
+            presentationStyle: .Modal,
+            presentationAction: {
+                Settings.sharedSettings().twitterLinkOpeningOption = .None
+                
+                let alert = UIAlertController(
+                    title: "self.settings.advanced.reset_open_in.alert.title".localized,
+                    message: "self.settings.advanced.reset_open_in.alert.message".localized,
+                    preferredStyle: .Alert
+                )
+                
+                alert.addAction(UIAlertAction(title: "general.ok".localized, style: .Cancel, handler: nil))
+                return alert
+        })
+        
+        return SettingsSectionDescriptor(
+            cellDescriptors: [resetOpenInButton],
+            header: .None,
+            footer: "self.settings.advanced.reset_open_in.subtitle".localized
+        )
     }
 }

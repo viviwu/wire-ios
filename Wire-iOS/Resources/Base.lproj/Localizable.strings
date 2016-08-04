@@ -589,6 +589,12 @@
 "self.settings.advanced.reset_push_token_alert.title" = "Push Token has been reset";
 "self.settings.advanced.reset_push_token_alert.message" = "Notifications will be restored in a few seconds.";
 
+"self.settings.advanced.reset_open_in" = "Reset 'Open in' application preferences";
+"self.settings.advanced.reset_open_in.subtitle" = "Resets the choices you made when asked to select a preffered applicaiton to open a specific type of link with";
+
+"self.settings.advanced.reset_open_in.alert.title" = "Preferences reset";
+"self.settings.advanced.reset_open_in.alert.message" = "The next time you open a link that can be openened in multiple applications you will be asked again.";
+
 // Technical Report
 "self.settings.technical_report_section.title" = "Technical Report";
 "self.settings.technical_report.send_report" = "Send report to Wire";
@@ -939,3 +945,11 @@
 "invite_banner.title" = "Bring your friends to Wire!";
 "invite_banner.message" = "Enjoy calls, messages, sketches, GIFs and more in private or with groups.";
 "invite_banner.invite_button_title" = "Invite more people";
+
+// Open Twitter Link Options
+
+"open_link.twitter.alert.title" = "Select your preffered Twitter application";
+"open_link.twitter.alert.message" = "We will save your selection, you can reset your choice in the Wire settings.";
+
+"open_link.twitter.option.default" = "Open in Twitter";
+"open_link.twitter.option.tweetbot" = "Open in Tweetbot";

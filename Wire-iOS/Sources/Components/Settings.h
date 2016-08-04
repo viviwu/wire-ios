@@ -92,6 +92,8 @@ extern NSString * const UserDefaultDisableAnalytics;
 @property (nonatomic) NSString *callSoundName;
 @property (nonatomic) NSString *pingSoundName;
 
+@property (nonatomic) NSInteger twitterLinkOpeningOptionRawValue;
+
 + (instancetype)sharedSettings;
 
 // Persist all the settings

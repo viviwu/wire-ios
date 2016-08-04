@@ -69,6 +69,7 @@
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>org-appextension-feature-password-management</string>
+		<string>tweetbot</string>
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>

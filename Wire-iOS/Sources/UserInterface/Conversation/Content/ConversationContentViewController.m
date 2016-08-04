@@ -758,6 +758,11 @@
     [self.delegate conversationContentViewController:self didTriggerResendingMessage:message];
 }
 
+- (void)conversationCell:(ConversationCell *)cell wantsToOpenURL:(NSURL *)url
+{
+    [self openURL:url];
+}
+
 - (void)conversationCell:(ConversationCell *)cell didSelectAction:(ConversationCellAction)actionId
 {
     switch (actionId) {
