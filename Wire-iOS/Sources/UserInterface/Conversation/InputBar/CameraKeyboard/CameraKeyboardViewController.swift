@@ -25,8 +25,8 @@ import CocoaLumberjackSwift
 import AVFoundation
 
 public protocol CameraKeyboardViewControllerDelegate: class {
-    func cameraKeyboardViewController(controller: CameraKeyboardViewController, didSelectVideo: AVURLAsset)
-    func cameraKeyboardViewController(controller: CameraKeyboardViewController, didSelectImageData: NSData, source: UIImagePickerControllerSourceType)
+    func cameraKeyboardViewController(controller: CameraKeyboardViewController, didSelectVideo: NSURL, duration: NSTimeInterval)
+    func cameraKeyboardViewController(controller: CameraKeyboardViewController, didSelectImageData: NSData, metadata: ImageMetadata)
     func cameraKeyboardViewControllerWantsToOpenFullScreenCamera(controller: CameraKeyboardViewController)
     func cameraKeyboardViewControllerWantsToOpenCameraRoll(controller: CameraKeyboardViewController)
 }
@@ -210,14 +210,27 @@ public class CameraKeyboardViewController: UIViewController {
                     }
                     
                     dispatch_async(dispatch_get_main_queue(), {
-                        self.delegate?.cameraKeyboardViewController(self, didSelectImageData: data, source: .PhotoLibrary)
+                        let metadata = ImageMetadata()
+                        metadata.camera = .None
+                        metadata.method = ConversationMediaPictureTakeMethod.Keyboard
+                        metadata.source = ConversationMediaPictureSource.Gallery
+                        metadata.sketchSource = .None
+                        
+                        self.delegate?.cameraKeyboardViewController(self, didSelectImageData: data, metadata: metadata)
                     })
                 })
                 
                 return
             }
             dispatch_async(dispatch_get_main_queue(), {
-                self.delegate?.cameraKeyboardViewController(self, didSelectImageData: data, source: .PhotoLibrary)
+                
+                let metadata = ImageMetadata()
+                metadata.camera = .None
+                metadata.method = ConversationMediaPictureTakeMethod.Keyboard
+                metadata.source = ConversationMediaPictureSource.Gallery
+                metadata.sketchSource = .None
+                
+                self.delegate?.cameraKeyboardViewController(self, didSelectImageData: data, metadata: metadata)
             })
         })
     }
@@ -228,20 +241,42 @@ public class CameraKeyboardViewController: UIViewController {
         let options = PHVideoRequestOptions()
         options.deliveryMode = .HighQualityFormat
         options.networkAccessAllowed = true
-        options.version = .Original
+        options.version = .Current
 
         self.showLoadingView = true
-        manager.requestAVAssetForVideo(asset, options: options, resultHandler: { videoAsset, audioMix, info in
+        manager.requestExportSessionForVideo(asset, options: options, exportPreset: AVAssetExportPresetMediumQuality) { exportSession, info in
+            
             dispatch_async(dispatch_get_main_queue(), {
-                self.showLoadingView = false
-
-                guard let videoAsset = videoAsset as? AVURLAsset else {
+            
+                guard let exportSession = exportSession else {
+                    self.showLoadingView = false
                     return
                 }
                 
-                self.delegate?.cameraKeyboardViewController(self, didSelectVideo: videoAsset)
+                let exportURL = NSURL(fileURLWithPath: (NSTemporaryDirectory() as NSString).stringByAppendingPathComponent("video-export.mp4"))
+                
+                if NSFileManager.defaultManager().fileExistsAtPath(exportURL.path!) {
+                    do {
+                        try NSFileManager.defaultManager().removeItemAtURL(exportURL)
+                    }
+                    catch let error {
+                        DDLogError("Cannot remove \(exportURL): \(error)")
+                    }
+                }
+                
+                exportSession.outputURL = exportURL
+                exportSession.outputFileType = AVFileTypeQuickTimeMovie
+                exportSession.shouldOptimizeForNetworkUse = true
+                exportSession.outputFileType = AVFileTypeMPEG4
+
+                exportSession.exportAsynchronouslyWithCompletionHandler {
+                    self.showLoadingView = false
+                    dispatch_async(dispatch_get_main_queue(), {
+                        self.delegate?.cameraKeyboardViewController(self, didSelectVideo: exportSession.outputURL!, duration: CMTimeGetSeconds(exportSession.asset.duration))
+                    })
+                }
             })
-        })
+        }
     }
 }
 
@@ -334,7 +369,17 @@ extension CameraKeyboardViewController: CameraCellDelegate {
     }
     
     public func cameraCell(cameraCell: CameraCell, didPickImageData imageData: NSData) {
-        self.delegate?.cameraKeyboardViewController(self, didSelectImageData: imageData, source: .Camera)
+        let isFrontCamera = cameraCell.cameraController.currentCamera == .Front
+        
+        let camera: ConversationMediaPictureCamera = isFrontCamera ? ConversationMediaPictureCamera.Front : ConversationMediaPictureCamera.Back
+        
+        let metadata = ImageMetadata()
+        metadata.camera = camera
+        metadata.method = ConversationMediaPictureTakeMethod.Keyboard
+        metadata.source = ConversationMediaPictureSource.Camera
+        metadata.sketchSource = .None
+        
+        self.delegate?.cameraKeyboardViewController(self, didSelectImageData: imageData, metadata: metadata)
     }
 }
 

@@ -37,7 +37,6 @@
 
 #import "ZClientViewController.h"
 #import "Analytics+iOS.h"
-#import "AnalyticsTracker+Camera.h"
 #import "AnalyticsTracker+Sketchpad.h"
 #import "AnalyticsTracker+FileTransfer.h"
 #import "NSString+Wire.h"
@@ -650,7 +649,9 @@
 - (void)postImage:(id<MediaAsset>)image
 {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-        [self.sendController sendMessageWithImageData:image.data completion:nil];
+        [self.sendController sendMessageWithImageData:image.data completion:^() {
+            [[Analytics shared] tagMediaSentPictureSourceOtherInConversation:self.conversation source:ConversationMediaPictureSourcePaste];
+        }];
     });
 }
 
@@ -681,6 +682,7 @@
 - (void)videoButtonPressed:(IconButton *)sender
 {
     [Analytics.shared tagMediaAction:ConversationMediaActionVideoMessage inConversation:self.conversation];
+    self.videoSendContext = ConversationMediaVideoContextCursorButton;
     [self presentImagePickerWithSourceType:UIImagePickerControllerSourceTypeCamera mediaTypes:@[(id)kUTTypeMovie] allowsEditing:false];
 }
 
@@ -705,6 +707,7 @@
     SketchViewController *viewController = [[SketchViewController alloc] init];
     viewController.sketchTitle = self.conversation.displayName;
     viewController.delegate = self;
+    viewController.source = ConversationMediaSketchSourceSketchButton;
     
     ZMUser *lastSender = self.conversation.lastMessageSender;
     [self.parentViewController presentViewController:viewController animated:YES completion:^{
@@ -722,14 +725,17 @@
 
 - (void)sketchViewController:(SketchViewController *)controller didSketchImage:(UIImage *)image
 {
-    [self.parentViewController dismissViewControllerAnimated:YES completion:nil];
-    if (image) {
-        
-        NSData *imageData = UIImagePNGRepresentation(image);
-        [self.sendController sendMessageWithImageData:imageData completion:^{
-            [self.analyticsTracker tagPictureTakenWithSource:AnalyticsEventTypePictureTakenSourceSketch];
-        }];
-    }
+    @weakify(self);
+    [self hideCameraKeyboardViewController:^{
+        @strongify(self);
+        [self.parentViewController dismissViewControllerAnimated:YES completion:nil];
+        if (image) {
+            NSData *imageData = UIImagePNGRepresentation(image);
+            [self.sendController sendMessageWithImageData:imageData completion:^{
+                   [[Analytics shared] tagMediaSentPictureSourceSketchInConversation:self.conversation sketchSource:controller.source];
+            }];
+        }
+    }];
 }
 
 @end

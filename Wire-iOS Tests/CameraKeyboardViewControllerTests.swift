@@ -37,12 +37,12 @@ class CameraKeyboardViewControllerDelegateMock: CameraKeyboardViewControllerDele
     }
     
     var cameraKeyboardDidSelectVideoHitCount: UInt = 0
-    @objc func cameraKeyboardViewController(controller: CameraKeyboardViewController, didSelectVideo: AVURLAsset) {
+    @objc func cameraKeyboardViewController(controller: CameraKeyboardViewController, didSelectVideo: NSURL, duration: NSTimeInterval) {
         cameraKeyboardDidSelectVideoHitCount = cameraKeyboardDidSelectVideoHitCount + 1
     }
     
     var cameraKeyboardViewControllerDidSelectImageDataHitCount: UInt = 0
-    @objc func cameraKeyboardViewController(controller: CameraKeyboardViewController, didSelectImageData: NSData, source: UIImagePickerControllerSourceType) {
+    @objc func cameraKeyboardViewController(controller: CameraKeyboardViewController, didSelectImageData: NSData, metadata: ImageMetadata) {
         cameraKeyboardViewControllerDidSelectImageDataHitCount = cameraKeyboardViewControllerDidSelectImageDataHitCount + 1
     }
 }
