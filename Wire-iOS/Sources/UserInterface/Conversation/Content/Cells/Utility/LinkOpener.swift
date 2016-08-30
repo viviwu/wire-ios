@@ -19,12 +19,30 @@
 
 import Foundation
 
-@objc enum LinkOpeningOption: Int {
-    case None, Default, Tweetbot
+enum LinkApplication {
+    case Twitter, Maps, Browser
+}
 
-    var displayString: String {
-        return displayStringKey.localized
+protocol LinkOpenOption {
+    var displayString: String { get }
+    var application: LinkApplication { get }
+    static func canOpenUrl(url: NSURL) -> Bool
+}
+
+enum TweetOpeningOption: Int, LinkOpenOption {
+    
+    case None, Default, Tweetbot
+    
+    static var allOptions: [LinkOpenOptions] {
+        return [
+            TweetOpeningOption.None,
+            TweetOpeningOption.Default,
+            TweetOpeningOption.Tweetbot
+        ]
     }
+    
+    var displayString: String { return displayStringKey.localized }
+    var application: LinkApplication { return .Twitter }
     
     private var displayStringKey: String {
         switch self {
@@ -33,19 +51,39 @@ import Foundation
         case .Tweetbot: return "open_link.twitter.option.tweetbot"
         }
     }
+    
+    static func canOpenUrl(url: NSURL) -> Bool {
+        guard UIApplication.sharedApplication().tweetbotInstalled else { return false }
+        return nil != url.tweetbotURL
+    }
+    
+    static var savedOption: TweetOpeningOption {
+        set { Settings.sharedSettings().twitterLinkOpeningOptionRawValue = newValue.rawValue }
+        get { return TweetOpeningOption(rawValue: Settings.sharedSettings().twitterLinkOpeningOptionRawValue) ?? .None }
+    }
 }
 
-extension Settings {
-    var twitterLinkOpeningOption: LinkOpeningOption {
-        set { twitterLinkOpeningOptionRawValue = newValue.rawValue }
-        get { return LinkOpeningOption(rawValue: twitterLinkOpeningOptionRawValue) ?? .None }
+enum MapsOpeningOption: Int, LinkOpenOption {
+    case None, Default, Google
+    
+    var application: LinkApplication { return .Maps }
+    
+    var displayString: String { return "INSERT_TITLE" }
+    
+    static func canOpenUrl(url: NSURL) -> Bool {
+        return false
     }
+}
+
+protocol LinkOpenerDelegate: class {
+    func linkOpener(opener: LinkOpener, selectPrefferedOption: [LinkOpenOption], withCompletion: LinkOpenOption -> Void)
 }
 
 @objc final class LinkOpener: NSObject {
 
     let settings = Settings.sharedSettings()
     let application = UIApplication.sharedApplication()
+    weak var delegate: LinkOpenerDelegate?
     
     let url: NSURL
     
@@ -53,23 +91,35 @@ extension Settings {
         self.url = url
         super.init()
     }
-    
-    func open(choiceHandler: (options: [LinkOpeningOption], completion: LinkOpeningOption -> Void) -> Void) {
+
+    func open<LinkType: LinkOpenOption>(choiceHandler: (options: [LinkType], completion: LinkType -> Void) -> Void) {
+        if TweetOpeningOption.canOpenUrl(url) {
+            if TweetOpeningOption.savedOption != .None {
+                delegate?.linkOpener(self, selectPrefferedOption: TweetOpeningOption.allOptions, withCompletion: didSelectOption)
+            }
+        } else if MapsOpeningOption.canOpenUrl(url) {
+            
+        }
+        
+        
         guard nil != url.tweetbotURL && application.tweetbotInstalled else { application.openURL(url); return }
         let option = settings.twitterLinkOpeningOption
         if option == .None {
-            choiceHandler(options: [.Default, .Tweetbot], completion: didelectOption); return
+            delegate?.linkOpener(self, selectPrefferedOption: [TweetOpeningOption.Default, TweetOpeningOption.Tweetbot], withCompletion: didSelectOption)
         }
+
         handleOption(option)
     }
     
-    func didelectOption(option: LinkOpeningOption) {
-        settings.twitterLinkOpeningOption = option
-        handleOption(option)
+    func didSelectOption(option: LinkOpenOption) {
+        if let tweetOption = option as? TweetOpeningOption {
+            settings.twitterLinkOpeningOption = tweetOption
+            handleOption(option)
+        }
     }
     
-    func handleOption(option: LinkOpeningOption) {
-        if let tweetbotURL = url.tweetbotURL where option == .Tweetbot {
+    func handleOption(option: LinkOpenOption) {
+        if let tweetOption = option as? TweetOpeningOption, tweetbotURL = url.tweetbotURL where tweetOption == .Tweetbot {
             if !application.openURL(tweetbotURL) {
                 application.openURL(url)
             }
